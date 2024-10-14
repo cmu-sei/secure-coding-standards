@@ -1,0 +1,6 @@
+[book]
+authors = ["Joseph C. Sible"]
+language = "en"
+multilingual = false
+src = "src"
+title = "CERT SEI Secure Coding Standards"
