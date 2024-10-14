@@ -6,4 +6,6 @@ src = "src"
 title = "CERT SEI Secure Coding Standards"
 
 [output.html]
+git-repository-url = "https://github.com/cmu-sei/secure-coding-standards"
+edit-url-template = "https://github.com/cmu-sei/secure-coding-standards/edit/master/{path}"
 site-url = "/secure-coding-standards/"
