@@ -186,6 +186,8 @@ jobs:
           fi
 
       - name: Generate static site
+        env:
+          NUXT_PUBLIC_GTAG_ID: ${{ secrets.NUXT_PUBLIC_GTAG_ID }}
         run: |
           echo "🏗️ Starting static site generation..."
           npm run generate
