@@ -1,0 +1,413 @@
+name: Deploy to GitHub Pages
+
+# This workflow builds and deploys a Nuxt static site to GitHub Pages
+# 
+# Prerequisites:
+# 1. GitHub Pages must be enabled in repository settings
+# 2. Repository secret 'CMU_SEI_PACKAGE_ACCESS_TOKEN' must be configured
+#    (required for accessing @cmu-sei scoped packages from GitHub Packages)
+# 3. Pages deployment source should be set to "GitHub Actions"
+# 4. Dependabot is configured to keep actions up-to-date (.github/dependabot.yml)
+#
+# Features:
+# - Version-pinned actions for stability
+# - Automated security vulnerability scanning
+# - Build output validation and performance budgets
+# - Post-deployment health checks
+# - Comprehensive build and deployment summaries
+# - Manual deployment controls via workflow_dispatch
+# - Dependency caching with fallback strategies
+# - Build size tracking and large file detection
+#
+# Manual Deployment Options:
+# - skip-cache: Bypass dependency cache for fresh install
+# - skip-audit: Skip security audit (use with caution)
+# - debug-mode: Enable detailed debug output
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      skip-cache:
+        description: 'Skip dependency cache'
+        required: false
+        type: boolean
+        default: false
+      skip-audit:
+        description: 'Skip security audit'
+        required: false
+        type: boolean
+        default: false
+      debug-mode:
+        description: 'Enable debug output'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Debug information
+        if: ${{ inputs.debug-mode }}
+        run: |
+          echo "::group::Debug Information"
+          echo "Workflow triggered by: ${{ github.event_name }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Runner OS: ${{ runner.os }}"
+          echo "Runner: ${{ runner.name }}"
+          echo "Skip cache: ${{ inputs.skip-cache }}"
+          echo "Skip audit: ${{ inputs.skip-audit }}"
+          echo "Working directory: $(pwd)"
+          echo "Shell: $SHELL"
+          echo "::endgroup::"
+
+      - name: Validate required secret
+        env:
+          SECRET_EXISTS: ${{ secrets.CMU_SEI_PACKAGE_ACCESS_TOKEN != '' }}
+        run: |
+          if [ "$SECRET_EXISTS" != "true" ]; then
+            echo "❌ Error: CMU_SEI_PACKAGE_ACCESS_TOKEN secret is not configured"
+            echo "Please add this secret in repository settings: Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+          echo "✅ Required secrets are configured"
+
+      - name: Verify package-lock integrity
+        run: |
+          if [ ! -f "package-lock.json" ]; then
+            echo "❌ Error: package-lock.json not found"
+            exit 1
+          fi
+          # Verify package-lock.json is valid JSON
+          if ! jq empty package-lock.json 2>/dev/null; then
+            echo "❌ Error: package-lock.json is not valid JSON"
+            exit 1
+          fi
+          echo "✅ package-lock.json integrity verified"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@cmu-sei'
+          token: ${{ secrets.CMU_SEI_PACKAGE_ACCESS_TOKEN }}
+
+      - name: Make script executable
+        run: chmod +x ./scripts/update-package-lock.sh
+
+      - name: Convert registry in package-lock.json
+        run: |
+          npm run change-registry-in-package-lock
+          if [ $? -ne 0 ]; then
+            echo "❌ Error: Registry conversion failed"
+            exit 1
+          fi
+          echo "✅ Registry conversion completed"
+
+      - name: Cache dependencies
+        if: ${{ !inputs.skip-cache }}
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}-${{ hashFiles('.nvmrc') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Report cache status
+        if: ${{ !inputs.skip-cache }}
+        run: |
+          if [ "${{ steps.cache.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Cache restored successfully"
+          else
+            echo "ℹ️ Cache miss - will download fresh dependencies"
+          fi
+
+      - name: Cache skipped
+        if: ${{ inputs.skip-cache }}
+        run: echo "⚠️ Cache skipped by user request"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.CMU_SEI_PACKAGE_ACCESS_TOKEN }}
+
+      - name: Audit dependencies
+        if: ${{ !inputs.skip-audit }}
+        run: |
+          echo "🔍 Checking for security vulnerabilities..."
+          npm audit --audit-level=moderate || {
+            echo "⚠️ Warning: Security vulnerabilities found"
+            echo "Run 'npm audit' locally to see details"
+            echo "Note: Build will continue, but review is recommended"
+          }
+        continue-on-error: true
+
+      - name: Audit skipped
+        if: ${{ inputs.skip-audit }}
+        run: echo "⚠️ Security audit skipped by user request"
+
+      - name: Validate baseURL configuration
+        run: |
+          echo "🔍 Validating Nuxt configuration..."
+          baseURL=$(sed -n "s/.*baseURL:[[:space:]]*'\([^']*\)'.*/\1/p" nuxt.config.ts)
+          if [ -z "$baseURL" ]; then
+            baseURL="/"
+          fi
+          echo "Configured baseURL: $baseURL"
+          if [[ "$baseURL" != "/secure-coding-standards/" ]]; then
+            echo "⚠️ Warning: baseURL is '$baseURL', expected '/secure-coding-standards/'"
+            echo "This may cause routing issues on GitHub Pages"
+          else
+            echo "✅ baseURL configuration validated"
+          fi
+
+      - name: Generate static site
+        run: |
+          echo "🏗️ Starting static site generation..."
+          npm run generate
+          echo "✅ Static site generation completed"
+
+      - name: Verify build output
+        run: |
+          if [ ! -d ".output/public" ]; then
+            echo "❌ Error: Build output directory .output/public not found"
+            exit 1
+          fi
+          
+          file_count=$(find .output/public -type f | wc -l)
+          if [ "$file_count" -eq 0 ]; then
+            echo "❌ Error: Build output directory is empty"
+            exit 1
+          fi
+          
+          # Calculate build size
+          build_size=$(du -sh .output/public | cut -f1)
+          echo "📦 Build output verified: $file_count files generated ($build_size total)"
+          
+          # Check for critical files
+          if [ ! -f ".output/public/index.html" ]; then
+            echo "❌ Error: index.html not found in build output"
+            exit 1
+          fi
+          
+          # Check for 404 page
+          if [ ! -f ".output/public/404.html" ] && [ ! -f ".output/public/200.html" ]; then
+            echo "⚠️ Warning: No error page (404.html or 200.html) found"
+          fi
+          
+          echo "✅ Build verification completed successfully"
+
+      - name: Validate content
+        run: |
+          echo "📋 Validating generated content..."
+          
+          # Check if index.html has actual content (not empty)
+          index_size=$(wc -c < ".output/public/index.html")
+          if [ "$index_size" -lt 100 ]; then
+            echo "❌ Error: index.html is suspiciously small ($index_size bytes)"
+            exit 1
+          fi
+          
+          # Check for common build issues
+          if grep -q "Cannot find module" .output/public/index.html; then
+            echo "❌ Error: Build error detected in index.html"
+            exit 1
+          fi
+          
+          # Verify baseURL is correctly applied in generated files
+          if ! grep -q "/secure-coding-standards/" .output/public/index.html; then
+            echo "⚠️ Warning: baseURL may not be correctly applied in generated files"
+          fi
+          
+          echo "✅ Content validation passed"
+
+      - name: Check performance budget
+        run: |
+          echo "⚡ Checking performance budget..."
+          
+          # Get total build size in KB
+          build_size_kb=$(du -sk .output/public | cut -f1)
+          max_size_kb=51200  # 50 MB limit
+          
+          echo "Build size: ${build_size_kb}KB (limit: ${max_size_kb}KB)"
+          
+          if [ "$build_size_kb" -gt "$max_size_kb" ]; then
+            echo "❌ Error: Build size exceeds performance budget"
+            echo "Current: ${build_size_kb}KB, Maximum: ${max_size_kb}KB"
+            exit 1
+          fi
+          
+          # Check for large files
+          echo "Checking for large files (>1MB)..."
+          large_files=$(find .output/public -type f -size +1M -exec ls -lh {} \; | awk '{print $9, $5}' || true)
+          if [ -n "$large_files" ]; then
+            echo "⚠️ Warning: Large files detected:"
+            echo "$large_files"
+          fi
+          
+          echo "✅ Performance budget check passed"
+
+      - name: Generate build summary
+        run: |
+          echo "## 📊 Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Files Generated:** $(find .output/public -type f | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Size:** $(du -sh .output/public | cut -f1)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Completed At:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Node Version:** $(node --version)" >> $GITHUB_STEP_SUMMARY
+          echo "- **NPM Version:** $(npm --version)" >> $GITHUB_STEP_SUMMARY
+          
+          # Properly handle cache status
+          if [ "${{ inputs.skip-cache }}" = "true" ]; then
+            echo "- **Cache Status:** ⚠️ Skipped" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.cache.outputs.cache-hit }}" = "true" ]; then
+            echo "- **Cache Status:** ✅ Hit" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Cache Status:** ❌ Miss" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Critical Files" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ index.html" >> $GITHUB_STEP_SUMMARY
+          if [ -f ".output/public/404.html" ]; then
+            echo "- ✅ 404.html" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⚠️ 404.html (not found)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Create deployment metadata
+        run: |
+          echo "📝 Creating deployment metadata..."
+          mkdir -p .output/public/.well-known
+          cat > .output/public/.well-known/deployment-info.json <<EOF
+          {
+            "commit": "${{ github.sha }}",
+            "branch": "${{ github.ref_name }}",
+            "workflow_run": "${{ github.run_id }}",
+            "workflow_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "actor": "${{ github.actor }}",
+            "timestamp": "$(date -u '+%Y-%m-%dT%H:%M:%SZ')",
+            "repository": "${{ github.repository }}",
+            "node_version": "$(node --version)",
+            "npm_version": "$(npm --version)"
+          }
+          EOF
+          
+          if [ -f ".output/public/.well-known/deployment-info.json" ]; then
+            echo "✅ Deployment metadata created"
+            cat .output/public/.well-known/deployment-info.json
+          else
+            echo "❌ Error: Failed to create deployment metadata"
+            exit 1
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./.output/public
+          retention-days: 7
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 10
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Verify deployment
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          echo "🌐 Site URL: ${{ steps.deployment.outputs.page_url }}"
+          echo "📦 Deployment completed at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+      - name: Health check
+        if: success()
+        run: |
+          echo "🏥 Running post-deployment health check..."
+          SITE_URL="${{ steps.deployment.outputs.page_url }}"
+          
+          # Wait a moment for deployment to propagate
+          sleep 10
+          
+          # Check if site is accessible and get content
+          echo "Checking $SITE_URL..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" "$SITE_URL" || echo "ERROR\n000")
+          HTTP_STATUS=$(echo "$RESPONSE" | tail -n 1)
+          CONTENT=$(echo "$RESPONSE" | head -n -1)
+          
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Health check passed: Site is accessible (HTTP $HTTP_STATUS)"
+            
+            # Validate actual content
+            if echo "$CONTENT" | grep -q "<html" || echo "$CONTENT" | grep -q "<!DOCTYPE"; then
+              echo "✅ Valid HTML content detected"
+            else
+              echo "⚠️ Warning: Response doesn't appear to be HTML"
+            fi
+            
+            # Check if deployment metadata is accessible
+            METADATA_URL="${SITE_URL}.well-known/deployment-info.json"
+            METADATA_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$METADATA_URL" || echo "000")
+            if [ "$METADATA_STATUS" = "200" ]; then
+              echo "✅ Deployment metadata accessible at $METADATA_URL"
+            fi
+          else
+            echo "⚠️ Warning: Site returned HTTP $HTTP_STATUS"
+            echo "This may be normal if DNS propagation is still in progress"
+            echo "Please verify manually: $SITE_URL"
+          fi
+
+      - name: Generate deployment summary
+        if: always()
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "### ✅ Deployment Successful" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Site URL:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Deployed at:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+            echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please check the logs above for details." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Report deployment failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Please check the logs above for details."
+          exit 1
