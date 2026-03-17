@@ -8,16 +8,16 @@ export default defineAppConfig({
   pageTitle: 'CERT Secure Coding',
   navigation: [
     { title: 'Home', path: '/' },
-    // {
-    //   title: 'Coding Standards',
-    //   path: '/coding-standards',
-    //   children: [
-    //     { title: 'Android Coding Standard', path: '/android-secure-coding-standard' },
-    //     { title: 'C Coding Standard', path: '/sei-cert-c-coding-standard' },
-    //     { title: 'C++ Coding Standard', path: '/sei-cert-c++-coding-standard' },
-    //     { title: 'Java Coding Standard', path: '/sei-cert-oracle-coding-standard-for-java' },
-    //     { title: 'Perl Coding Standard', path: '/sei-cert-perl-coding-standard' },
-    //   ]
-    // },
+    {
+      title: 'Coding Standards',
+      path: '/coding-standards',
+      children: [
+        { title: 'Android Coding Standard', path: '/android-secure-coding-standard' },
+        { title: 'C Coding Standard', path: '/sei-cert-c-coding-standard' },
+        { title: 'C++ Coding Standard', path: '/sei-cert-cpp-coding-standard' },
+        { title: 'Java Coding Standard', path: '/sei-cert-oracle-coding-standard-for-java' },
+        { title: 'Perl Coding Standard', path: '/sei-cert-perl-coding-standard' },
+      ]
+    },
   ],
 })
