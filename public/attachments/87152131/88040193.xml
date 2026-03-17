@@ -1,0 +1,808 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RulePack xmlns="xmlns://www.fortifysoftware.com/schema/rules"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="RulePack">
+	<RulePackID>08D7AB82-18C2-447C-8C65-C9224D8872E4</RulePackID>
+	<SKU>CERT10002</SKU>
+	<Name><![CDATA[CERT Secure Coding Rulepack, C++ language (combined)]]></Name>
+	<Version>1.0</Version>
+	<Description><![CDATA[CERT Secure Coding Rulepack, C++ language (combined)]]></Description>
+	<Rules version="3.2">
+		<RuleDefinitions>
+
+			<SemanticRule formatVersion="3.3" language="cpp">
+				<RuleID>5BBEDF1F-ACE9-4622-B0AC-8DAB496AFD88</RuleID>
+				<Notes><![CDATA[]]></Notes>
+				<VulnCategory>RES32-C. Use new and delete rather than raw memory allocation and deallocation</VulnCategory>
+				<DefaultSeverity>4.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[RES32-C. Use new and delete rather than raw memory allocation and deallocation]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule RES32-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/4AY">RES32-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/4AY">RES32-C</a>.]]></Recommendations>
+				</Description>
+				<Type>default</Type>
+				<FunctionIdentifier>
+					<FunctionName>
+						<Pattern>(malloc|calloc|realloc|free)</Pattern>
+					</FunctionName>
+				</FunctionIdentifier>
+			</SemanticRule>
+
+	<!-- XXX Why is this marked as a C++ rule?  Should be C as well.  -crd -->
+			<SemanticRule formatVersion="3.3" language="cpp">
+				<RuleID>981B54A5-339D-418F-98C6-CB00591B2D80</RuleID>
+				<Notes><![CDATA[]]></Notes>
+				<VulnCategory>RES39-C. Do not use longjmp</VulnCategory>
+				<DefaultSeverity>2.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[RES39-C. Do not use longjmp]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule RES39-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/Kgc">RES39-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/Kgc">RES39-C</a>.]]></Recommendations>
+				</Description>
+				<Type>default</Type>
+				<FunctionIdentifier>
+					<FunctionName>
+						<Value>longjmp</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+			</SemanticRule>
+
+			<SemanticRule formatVersion="3.3" language="cpp">
+				<RuleID>2A61878E-3191-4DEE-9635-96DE7FC296E9</RuleID>
+				<Notes><![CDATA[]]></Notes>
+				<VulnCategory>DAN32-C. Do not delete this</VulnCategory>
+				<DefaultSeverity>4.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[DAN32-C. Do not delete this]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule DAN32-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/KAc">DAN32-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/KAc">DAN32-C</a>.]]></Recommendations>
+				</Description>
+				<Type>default</Type>
+				<FunctionIdentifier>
+					<FunctionName>
+						<Value>delete</Value>
+					</FunctionName>
+					<Parameters>
+						<ParamType>this</ParamType>
+					</Parameters>
+				</FunctionIdentifier>
+			</SemanticRule>
+
+			<SemanticRule formatVersion="3.3" language="cpp">
+				<RuleID>B8C4E632-F955-4044-9936-07BCD97CAA94</RuleID>
+				<Notes><![CDATA[]]></Notes>
+				<VulnCategory>BSC30-C. Use the c_str() member to retrieve a const pointer to a null-terminated byte string</VulnCategory>
+				<DefaultSeverity>2.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[BSC30-C. Use the c_str() member to retrieve a const pointer to a null-terminated byte string]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule BSC30-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/PgQ">BSC30-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/PgQ">BSC30-C</a>.]]></Recommendations>
+				</Description>
+				<Type>default</Type>
+				<FunctionIdentifier>
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Value>basic_string</Value>
+					</ClassName>
+					<FunctionName>
+						<Value>data</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+			</SemanticRule>
+
+	<!-- XXX Conflicts with the C rule?  Which one does this implement?  -crd -->
+			<SemanticRule formatVersion="3.3" language="cpp">
+				<RuleID>3D7D0E92-2642-4754-859D-7BCF18F1F142</RuleID>
+				<Notes><![CDATA[]]></Notes>
+				<VulnCategory>EXP04-A. Do not perform byte-by-byte comparisons between structures</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract/>
+					<Explanation/>
+					<Recommendations/>
+					<Tips>
+						<Tip/>
+					</Tips>
+				</Description>
+				<Type>default</Type>
+				<FunctionIdentifier>
+					<FunctionName>
+						<Value>memcmp</Value>
+					</FunctionName>
+					<Parameters>
+						<ParamType>struct .* .*</ParamType>
+					</Parameters>
+				</FunctionIdentifier>
+			</SemanticRule>
+
+			<SemanticRule formatVersion="3.3" language="cpp">
+				<RuleID>0FE8B25E-851B-42A8-9CDB-26A83EB64341</RuleID>
+				<Notes><![CDATA[Note that the information for this C++ rule is slightly different than the corresponding C rule with the same name.]]></Notes>
+				<VulnCategory>INT06-A. Use strtol() to convert a string token to an integer</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[INT06-A. Use strtol() to convert a string token to an integer]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Recommendation INT06-A.  More information can be found in <a href="https://www.securecoding.cert.org/confluence/x/cAo">INT06-A</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="https://www.securecoding.cert.org/confluence/x/cAo">INT06-A</a>.]]></Recommendations>
+				</Description>
+				<Type>default</Type>
+				<FunctionIdentifier>
+					<NamespaceName>
+						<Value>.*</Value>
+					</NamespaceName>
+					<ClassName>
+						<Value>.*</Value>
+					</ClassName>
+					<FunctionName>
+						<Value>atoi</Value>
+					</FunctionName>
+					<Parameters>
+						<ParamType>char</ParamType>
+					</Parameters>
+				</FunctionIdentifier>
+			</SemanticRule>
+
+			<ControlflowRule formatVersion="3.3" language="cpp">
+                                <RuleID>D2E1C13D-7DD7-4E66-B757-851FA8FC80E5</RuleID>
+                                <Notes><![CDATA[]]></Notes>
+                                <VulnCategory>FLP32-C. Prevent or detect domain and range errors in math functions</VulnCategory>
+                                <DefaultSeverity>3.0</DefaultSeverity>
+                                <Description>
+                                        <Abstract><![CDATA[FLP32-C. Prevent or detect domain and range errors in math functions]]></Abstract>
+                                        <Explanation><![CDATA[This issue results from a violation of CERT C Secure Coding Rule FLP32-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/rgQ">FLP32-C</a>.]]></Explanation>
+                                        <Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/rgQ">FLP32-C</a>.]]></Recommendations>
+                                </Description>
+                                <FunctionIdentifier id="acos">
+                                        <FunctionName>
+                                                <Value>acos</Value>
+                                        </FunctionName>
+                                </FunctionIdentifier>
+                                <FunctionIdentifier id="asin">
+                                        <FunctionName>
+                                                <Value>asin</Value>
+                                        </FunctionName>
+                                </FunctionIdentifier>
+                                <FunctionIdentifier id="atan2">
+                                        <FunctionName>
+                                                <Value>atan2</Value>
+                                        </FunctionName>
+                                </FunctionIdentifier>
+                                <FunctionIdentifier id="log">
+                                        <FunctionName>
+                                                <Value>log</Value>
+                                        </FunctionName>
+                                </FunctionIdentifier>
+                                <FunctionIdentifier id="log10">
+                                        <FunctionName>
+                                                <Value>log10</Value>
+                                        </FunctionName>
+                                </FunctionIdentifier>
+                                <FunctionIdentifier id="pow">
+                                        <FunctionName>
+                                                <Value>pow</Value>
+                                        </FunctionName>
+                                </FunctionIdentifier>
+                                <FunctionIdentifier id="sqrt">
+                                        <FunctionName>
+                                                <Value>sqrt</Value>
+                                        </FunctionName>
+                                </FunctionIdentifier>
+                                <FunctionIdentifier id="isless">
+                                        <FunctionName>
+                                                <Value>isless</Value>
+                                        </FunctionName>
+                                </FunctionIdentifier>
+                                <FunctionIdentifier id="isgreater">
+                                        <FunctionName>
+                                                <Value>isgreater</Value>
+                                        </FunctionName>
+                                </FunctionIdentifier>
+
+                                <Definition><![CDATA[
+                 state start START;
+                 state VAR;
+                 state CHK;
+                 state CALL;
+                 state error NCHK;
+
+                 var x;
+
+                 pattern fns{$acos(x)|$asin(x)|$atan2(x,...)|$atan2(...,x)|$log(x)|$log10(x)|$pow(x,...)|$pow(...,x)|$sqrt(x)}
+                                
+                 START -> VAR{ #any_declaration(x) | #param(x, ?) | x = ?}
+                 VAR -> CHK{ #compare(x, ?) |isless(x,?) |isgreater(x,?) }
+                 CHK -> CALL{pattern fns | $sqrt(x)}
+                 VAR -> NCHK{ pattern fns | $sqrt(x) }
+
+                                ]]></Definition>
+                        </ControlflowRule>
+
+			<ControlflowRule formatVersion="3.3" language="cpp">
+				<RuleID>EAB076BE-D140-4FAD-B27C-50A6A985B8E0</RuleID>
+				<Notes><![CDATA[]]></Notes>
+				<VulnCategory>DAN34-C. Do not dereference invalid pointers</VulnCategory>
+				<DefaultSeverity>4.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[DAN34-C. Do not dereference invalid pointers]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule DAN34-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/fA4">DAN34-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/fA4">DAN34-C</a>.]]></Recommendations>
+				</Description>
+				<FunctionIdentifier id="malloc">
+					<FunctionName>
+						<Value>malloc</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="new">
+					<FunctionName>
+						<Value>operator new[]</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				
+				<Definition><![CDATA[state start START;
+			state ALLOC;
+			state TEST;
+			state RETURN;
+			state error NOTEST;
+
+			var foo;
+
+			pattern allocate{ foo = $malloc(...)|foo = $new(...) }
+			pattern test{ #ifblock(foo, ?, true) | #ifblock(foo, ?, false) }
+
+			START -> ALLOC{ pattern allocate }
+			ALLOC -> TEST{ pattern test }
+			ALLOC -> RETURN{ #return(foo) }
+			ALLOC -> NOTEST{ foo }]]></Definition>
+			</ControlflowRule>
+
+			<ControlflowRule formatVersion="3.3" language="cpp">
+				<RuleID>6E4D9D71-ED08-461B-9E76-7A12E296B336</RuleID>
+				<Notes><![CDATA[]]></Notes>
+				<VulnCategory>BSC31-C. Do not modify the null-terminated byte string returned by the c_str() member</VulnCategory>
+				<DefaultSeverity>2.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[BSC31-C. Do not modify the null-terminated byte string returned by the c_str() member]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule BSC31-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/SwQ">BSC31-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/SwQ">BSC31-C</a>.]]></Recommendations>
+				</Description>
+				<FunctionIdentifier id="c_str">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Value>basic_string</Value>
+					</ClassName>
+					<FunctionName>
+						<Value>c_str</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="cpy">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Pattern>.*</Pattern>
+					</ClassName>
+					<FunctionName>
+						<Pattern>str*cpy</Pattern>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="cat">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Pattern>.*</Pattern>
+					</ClassName>
+					<FunctionName>
+						<Pattern>str*cat</Pattern>
+					</FunctionName>
+				</FunctionIdentifier>
+				<Definition><![CDATA[state start START;
+			state GET;
+			state END;
+			state error BAD;
+
+			var str;
+
+			pattern alter{ $cat(str, ...) | $cpy(str, ...) | str = ? }
+
+			START -> GET{ str = $c_str(...) }
+			GET -> END{ #end_scope(str) }
+			GET -> BAD{ pattern alter }]]></Definition>
+			</ControlflowRule>
+
+			<ControlflowRule formatVersion="3.3" language="cpp">
+				<RuleID>E5F9AC07-0C0B-420C-912F-2337F0AA23EF</RuleID>
+				<Notes><![CDATA[]]></Notes>
+				<VulnCategory>BSC33-C. Use valid references, pointers, and iterators to reference string objects</VulnCategory>
+				<DefaultSeverity>4.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[BSC33-C. Use valid references, pointers, and iterators to reference string objects]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule BSC33-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/QAQ">BSC33-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/QAQ">BSC33-C</a>.]]></Recommendations>
+				</Description>
+				<FunctionIdentifier id="swap">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Pattern>.*</Pattern>
+					</ClassName>
+					<FunctionName>
+						<Value>swap</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="shift">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Pattern>.*</Pattern>
+					</ClassName>
+					<FunctionName>
+						<Value>operator&gt;&gt;</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="getline">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Pattern>.*</Pattern>
+					</ClassName>
+					<FunctionName>
+						<Value>getline</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="data">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Value>basic_string</Value>
+					</ClassName>
+					<FunctionName>
+						<Value>data</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="c_str">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Value>basic_string</Value>
+					</ClassName>
+					<FunctionName>
+						<Value>c_str</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="brackets">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Value>basic_string</Value>
+					</ClassName>
+					<FunctionName>
+						<Value>operator[]</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="at">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Value>basic_string</Value>
+					</ClassName>
+					<FunctionName>
+						<Value>at</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="end">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Value>basic_string</Value>
+					</ClassName>
+					<FunctionName>
+						<Pattern>[r]?end</Pattern>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="erase">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Pattern>.*</Pattern>
+					</ClassName>
+					<FunctionName>
+						<Value>erase</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="begin">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Value>basic_string</Value>
+					</ClassName>
+					<FunctionName>
+						<Value>begin</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="insert">
+					<NamespaceName>
+						<Pattern>.*</Pattern>
+					</NamespaceName>
+					<ClassName>
+						<Value>basic_string</Value>
+					</ClassName>
+					<FunctionName>
+						<Value>insert</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<Definition><![CDATA[state start START;
+			state ASSIGN;
+			state error ARG;
+			state END;
+			state error CALL;
+
+			var foo;
+			var str;
+
+			pattern equal{ foo= $begin(...) | $data(...) | $end(...) | $at(...)  }
+
+			START -> ASSIGN{ foo = str.$begin(...) }
+			ASSIGN -> ARG{ str.$insert(foo, ...) }
+			ASSIGN -> END{ #end_scope(foo) }]]></Definition>
+			</ControlflowRule>
+
+			<ControlflowRule formatVersion="3.3" language="cpp">
+				<RuleID>233FCF46-AEE6-4B01-A224-6C6A1D9F066A</RuleID>
+				<Notes><![CDATA[]]></Notes>
+				<VulnKingdom></VulnKingdom>
+				<VulnCategory>BSC32-C. Do not use the pointer value returned by c_str() after any subsequent call to a non-const member function</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[BSC32-C. Do not use the pointer value returned by c_str() after any subsequent call to a non-const member function]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule BSC32-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/NwQ">BSC32-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/NwQ">BSC32-C</a>.]]></Recommendations>
+				</Description>
+				<FunctionIdentifier id="c_str">
+					<NamespaceName>
+						<Value>.*</Value>
+					</NamespaceName>
+					<ClassName>
+						<Value>basic_string</Value>
+					</ClassName>
+					<FunctionName>
+						<Value>c_str</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<FunctionIdentifier id="append">
+					<NamespaceName>
+						<Value>.*</Value>
+					</NamespaceName>
+					<ClassName>
+						<Value>basic_string</Value>
+					</ClassName>
+					<FunctionName>
+						<Value>append</Value>
+					</FunctionName>
+				</FunctionIdentifier>
+				<Definition><![CDATA[state start START;
+			state error CSTR;
+			state END;
+			state error BAD;
+
+			var str;
+			var ps;
+			pattern alter{ ps.$append(...) }
+
+			START -> CSTR{ str = ps.$c_str(...) }
+			CSTR -> END{ #end_scope(str) }
+			CSTR -> BAD{ pattern alter }]]></Definition>
+			</ControlflowRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>ABAF872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>ARR30-C. Guarantee that array indices are within the valid range</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[ARR30-C. Guarantee that array indices are within the valid range]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule ARR30-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/Wwk">ARR30-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/Wwk">ARR30-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+						Operation: op == "+" and lhs is [VariableAccess: variable.referenceTaken] and rhs is [VariableAccess: variable.type.name matches "(signed)?int"]
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>AAAB872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>EXP33-C. Do not reference uninitialized variables</VulnCategory>
+				<DefaultSeverity>1.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[EXP33-C. Do not reference uninitialized variables]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule EXP33-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/KAs">EXP33-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/KAs">EXP33-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+						VariableAccess: variable.referenceTaken and (enclosingFunction contains [Declaration:])
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>CDDF872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>DAN32-C. Do not delete this</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[DAN32-C. Do not delete this]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule DAN32-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/KAc">DAN32-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/KAc">DAN32-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+						FunctionCall : function.name matches "operator delete" and arguments[0] is [VariableAccess : variable.name is "this~"]
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>DDDF872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>OBJ33-C. Do not slice polymorphic objects</VulnCategory>
+				<DefaultSeverity>1.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[OBJ33-C. Do not slice polymorphic objects]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule OBJ33-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/NQ4">OBJ33-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/NQ4">OBJ33-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+						FunctionCall : function.name is "operator="
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>DDCF872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>DCL30-C. Do not use names reserved for the implementation</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[DCL30-C. Do not use names reserved for the implementation]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule DCL30-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/Qg8">DCL30-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/Qg8">DCL30-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+						Variable : name matches "(\b_.*_.*)|(\b_\p{Upper}.*)"
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>DCCF872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>EXP36-C. Do not cast or delete pointers to incomplete classes</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[EXP36-C. Do not cast or delete pointers to incomplete classes]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule EXP36-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/HoFS">EXP36-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/HoFS">EXP36-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+				AssignmentStatement a: a.lhs.type.name is "[UnknownType]" and is [not( a.rhs.type.name is "[UnkownType]")]
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>DCDF872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>EXP37-C. Avoid side effects in assertions</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[EXP37-C. Avoid side effects in assertions]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule EXP37-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/CYBX">EXP37-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/CYBX">EXP37-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+				FunctionCall :  is [not (enclosingFunction.name is "main")]
+				and function.name is "__eprintf" and arguments[0] is [StringLiteral : image matches ".*assertion.*"]
+				and arguments[3] is [StringLiteral : image matches ".*\+\+.*" or image matches ".*\..*\(\).*" ]
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>ACDF872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>INT31-C. Ensure that integer conversions do not result in lost or misinterpreted data</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[INT31-C. Ensure that integer conversions do not result in lost or misinterpreted data]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule INT31-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/Mwo">INT31-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/Mwo">INT31-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+						AssignmentStatement a: a.lhs is [ VariableAccess va: va.variable.type.name matches "(unsigned|signed)?\s*(int|char|short|long)"
+						and a.rhs is [VariableAccess vb: vb.variable.type.name matches "(unsigned)?\s*(long|int|short|char)"
+						and is [not (vb.variable.type.name == va.variable.type.name) ]
+						and not a.enclosingFunction contains [IfStatement : expression is [Operation : lhs is [VariableAccess : variable.name == vb.variable.name]
+						or rhs is [VariableAccess : variable.name == vb.variable.name ] ] ] ] ]
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.4" language="cpp">
+				<RuleID>9E9CBE26-AD1E-4AE1-A558-8C0C9B4BDB50</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>OBJ33-C. Do not slice polymorphic objects</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[OBJ33-C. Do not slice polymorphic objects]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule OBJ33-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/NQ4">OBJ33-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/NQ4">OBJ33-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+						AssignmentStatement as: (not as.lhs.type.primitive) and (not
+						as.rhs.type.primitive) and (as.lhs.type.definition.abstract)
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>BCDF872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>INT33-C. Ensure that division and modulo operations do not result in divide-by-zero errors</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[INT33-C. Ensure that division and modulo operations do not result in divide-by-zero errors]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule INT33-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/PAo">INT33-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/PAo">INT33-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+						AssignmentStatement a: a.rhs is
+						[Operation o: o.op matches "(\/|\%)"
+						and o.rhs is [VariableAccess vb: vb.variable.type.name matches "(unsigned)?\s*(long|int|short|char)"
+						and not a.enclosingFunction contains [IfStatement : expression is [Operation : lhs is [VariableAccess : variable.name == vb.variable.name] ] ] ]
+						and o.lhs is [VariableAccess vc: vc.variable.type.name matches "(unsigned)?\s*(long|int|short|char)"
+						and not a.enclosingFunction contains [IfStatement : expression is [Operation : lhs is [VariableAccess : variable.name == vc.variable.name] ] ] ]
+						]
+				]]></Predicate>
+			</StructuralRule>
+
+	<!-- XXX Clarify why we have three rules for INT32-C here.  -crd -->
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>BCBF872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>INT32-C. Ensure that integer operations do not result in an overflow</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[INT32-C. Ensure that integer operations do not result in an overflow]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule INT32-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/7Qg">INT32-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/7Qg">INT32-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[AssignmentStatement a: a.rhs is [Operation o: o.op matches "(\+|-|\*|\/|<<|>>)" and o.rhs is [VariableAccess vb: vb.variable.type.name matches "(unsigned)?\s*(long|int|short|char)"
+					and not	a.enclosingFunction contains [IfStatement : expression is [Operation : lhs is [VariableAccess : variable.name == vb.variable.name] ] ] ]
+					and o.lhs is [VariableAccess vc: vc.variable.type.name matches "(unsigned)?\s*(long|int|short|char)"
+					and not a.enclosingFunction contains [IfStatement : expression is [Operation : lhs is [VariableAccess : variable.name == vc.variable.name] ] ] ] ]
+					and not a in [WhileStatement: ]
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>BCBF872A-CC96-4272-BF52-7315AF62B566</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>INT32-C. Ensure that integer operations do not result in an overflow</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[INT32-C. Ensure that integer operations do not result in an overflow]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule INT32-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/7Qg">INT32-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/7Qg">INT32-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[AssignmentStatement a: a.rhs is [Operation o: o.op matches "-"
+					and o.rhs is [VariableAccess vb: vb.variable.type.name matches "(unsigned)?\s*(long|int|short|char)"
+					and not a.enclosingFunction contains [IfStatement : expression is [Operation : lhs is [VariableAccess : variable.name == vb.variable.name] ] ] ] ]
+					and not a in [WhileStatement: ]
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>BCBF872A-CC96-4272-BF52-7315AF62B567</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>INT32-C. Ensure that integer operations do not result in an overflow</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[INT32-C. Ensure that integer operations do not result in an overflow]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule INT32-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/7Qg">INT32-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/7Qg">INT32-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[AssignmentStatement a: a.rhs is [Operation o: o.op matches "(\+|-)"
+					and o.lhs is [VariableAccess vc: vc.variable.type.name matches "(unsigned)?\s*(long|int|short|char)"
+					and not a.enclosingFunction contains [IfStatement : expression is [Operation : lhs is [VariableAccess : variable.name == vc.variable.name] ] ] ] ]
+					and not a in [WhileStatement: ]
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>BDBF872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>FLP31-C. Do not use floating point variables as loop counters</VulnCategory>
+				<DefaultSeverity>2.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[FLP31-C. Do not use floating point variables as loop counters]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule FLP31-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/lA0">FLP31-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/lA0">FLP31-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+						WhileStatement w: w.expression is [Operation : lhs is [VariableAccess vb: vb.variable.type.name == "float"
+								and w.block contains [Operation : op matches "(\+|-|\*|\/|<<|>>)"
+										and lhs is [VariableAccess: variable.name == vb.variable.name] ] ] ]
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>CDBF872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>INT06-A. Use strtol() to convert a string token to an integer</VulnCategory>
+				<DefaultSeverity>3.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[INT06-A. Use strtol() to convert a string token to an integer]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Recommendation INT06-A.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/cAo">INT06-A</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/cAo">INT06-A</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+			FunctionCall : function.name matches "(atoi|atol|atoll)" and arguments[0].type.name == "char"
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>FAAD872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>FLP30-C. Take granularity into account when comparing floating point values</VulnCategory>
+				<DefaultSeverity>2.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[FLP30-C. Take granularity into account when comparing floating point values]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule FLP30-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/qQo">FLP30-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/qQo">FLP30-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+			IfStatement : expression is [Operation : op == "==" and rhs.type.name == "float" and lhs.type.name == "float" ]
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>BAAD872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>INT35-C. Do not truncate the return value from a character input function</VulnCategory>
+				<DefaultSeverity>4.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[INT35-C. Do not truncate the return value from a character input function]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule INT35-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/QAo">INT35-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/QAo">INT35-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+			AssignmentStatement : lhs is [VariableAccess va: va.type.name matches "char" ]
+			and rhs is [FunctionCall : function.returnType.name matches "int" ]
+				]]></Predicate>
+			</StructuralRule>
+
+			<StructuralRule formatVersion="3.3" language="cpp">
+				<RuleID>BACD872A-CC96-4272-BF52-7315AF62B565</RuleID>
+				<VulnKingdom>API Abuse</VulnKingdom>
+				<VulnCategory>BSC32-C. Do not use the pointer value returned by c_str() after any subsequent call to a non-const member function</VulnCategory>
+				<DefaultSeverity>4.0</DefaultSeverity>
+				<Description>
+					<Abstract><![CDATA[BSC32-C. Do not use the pointer value returned by c_str() after any subsequent call to a non-const member function]]></Abstract>
+					<Explanation><![CDATA[This issue results from a violation of CERT C++ Secure Coding Rule BSC32-C.  More information can be found in <a href="http://www.securecoding.cert.org/confluence/x/NwQ">BSC32-C</a>.]]></Explanation>
+					<Recommendations><![CDATA[Implement a compliant solution as described in <a href="http://www.securecoding.cert.org/confluence/x/NwQ">BSC32-C</a>.]]></Recommendations>
+				</Description>
+				<Predicate><![CDATA[
+			AssignmentStatement : rhs is [FunctionCall : function.name is "c_str"
+			and instance is [VariableAccess va: enclosingFunction contains [FunctionCall : instance is [VariableAccess vb: vb.variable.name == va.variable.name ]
+			and function.name matches "(append|assign|clear|erase|insert|push_back|rbegin|rend|replace|reserve|resize)" ] ] ]
+				]]></Predicate>
+			</StructuralRule>
+
+		</RuleDefinitions>
+	</Rules>
+</RulePack>
