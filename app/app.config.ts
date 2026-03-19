@@ -2,7 +2,7 @@ export default defineAppConfig({
   sitemap: {
     hostname: 'https://cmu-sei.github.io/secure-coding-standards/',
   },
-  githubUrl: 'https://cmu-sei.github.io/secure-coding-standards/',
+  githubUrl: 'https://github.com/cmu-sei/secure-coding-standards',
   appSuitePrefix: 'SEI',
   appSuite: 'CERT',
   pageTitle: 'CERT Secure Coding',
