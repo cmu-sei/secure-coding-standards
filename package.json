@@ -17,5 +17,8 @@
   },
   "devDependencies": {
     "vue-router": "^5.0.4"
+  },
+  "overrides": {
+    "commander": "^13.1.0"
   }
 }
