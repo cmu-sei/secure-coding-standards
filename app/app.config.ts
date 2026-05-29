@@ -15,7 +15,7 @@ export default defineAppConfig({
                 { title: 'Android Coding Standard', path: '/android-secure-coding-standard' },
                 { title: 'C Coding Standard', path: '/sei-cert-c-coding-standard' },
                 { title: 'C++ Coding Standard', path: '/sei-cert-cpp-coding-standard' },
-                { title: 'Fortran Coding Standard', path: '/cert-fortran-secure-coding-standard' },
+                { title: 'Fortran Coding Standard', path: '/sei-cert-fortran-coding-standard' },
                 { title: 'Java Coding Standard', path: '/sei-cert-oracle-coding-standard-for-java' },
                 { title: 'Perl Coding Standard', path: '/sei-cert-perl-coding-standard' },
             ]
