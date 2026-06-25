@@ -3,7 +3,7 @@
 Extract links from markdown files in content/ and construct a map
 between files and all links they contain (both HTML and markdown style).
 
-EXAMPLE:  python3 ./scripts/extract_links.py  --find-urls /sei-cert-c-coding-standard/recommendations/integers-int/int01-c
+EXAMPLE:  python3 ./scripts/extract_links.py find-urls /sei-cert-c-coding-standard/recommendations/integers-int/int01-c
   prints all files that reference CERT recommendation INT01-C
 """
 
@@ -241,16 +241,21 @@ def main():
     parser = argparse.ArgumentParser(
         description='Extract links from markdown files and perform analysis'
     )
-    parser.add_argument(
-        '--find-urls', '-f',
-        nargs='+',
-        help='Find files that reference these URLs (comma-separated or space-separated)'
-    )
-    parser.add_argument(
-        '--find-rules-to-recommendations', '-r',
-        action='store_true',
-        help='Find all files under rules/ that reference files under recommendations/'
-    )
+    subparsers = parser.add_subparsers(dest='command', help='Subcommands')
+
+    # subcommand: find-urls
+    parser_find_urls = subparsers.add_parser('find-urls', help='Find files that reference these URLs')
+    parser_find_urls.add_argument('urls', nargs='+', help='URLs to search for')
+
+    # subcommand: find-urls-from-file
+    parser_find_urls_file = subparsers.add_parser('find-urls-from-file', help='Find files that reference URLs listed in a file')
+    parser_find_urls_file.add_argument('file_path', help='Path to the file containing URLs')
+
+    # subcommand: rules-to-recommendations
+    parser_rules = subparsers.add_parser('rules-to-recommendations', help='Find all files under rules/ that reference files under recommendations/')
+
+    # subcommand: summary
+    parser_summary = subparsers.add_parser('summary', help='Show a summary of links found')
 
     args = parser.parse_args()
 
@@ -258,48 +263,70 @@ def main():
     link_map = process_markdown_files('./content')
 
     # Perform requested analysis
-    if args.find_urls:
-        # Parse comma-separated URLs
-        urls = []
-        for item in args.find_urls:
-            urls.append(item.strip())
+    if args.command == 'find-urls':
+        # Parse URLs
+        urls = [url.strip() for url in args.urls]
 
         results = find_files_with_urls(link_map, urls)
 
         print(f"\nFiles referencing {len(urls)} URL(s):")
         if results:
-            for file_path, matching_urls in sorted(results.items()):
-                print(f"  {file_path}:")
+            for i, (file_path, matching_urls) in enumerate(sorted(results.items())):
+                if i > 0:
+                    print()
+                print(f"- [ ] {file_path}:")
                 for url in matching_urls:
                     print(f"    - {url}")
         else:
             print("  No files found matching the specified URLs.")
 
-    if args.find_rules_to_recommendations:
+    elif args.command == 'find-urls-from-file':
+        with open(args.file_path, 'r', encoding='utf-8') as f:
+            urls = [line.strip() for line in f if line.strip()]
+
+        results = find_files_with_urls(link_map, urls)
+
+        print(f"\nFiles referencing {len(urls)} URL(s) from {args.file_path}:")
+        if results:
+            for i, (file_path, matching_urls) in enumerate(sorted(results.items())):
+                if i > 0:
+                    print()
+                print(f"- [ ] {file_path}:")
+                for url in matching_urls:
+                    print(f"    - {url}")
+        else:
+            print("  No files found matching the specified URLs.")
+
+    elif args.command == 'rules-to-recommendations':
         results = find_rules_referencing_recommendations(link_map)
 
         print(f"\nFiles under rules/ referencing recommendations/:")
         if results:
             print(f"  Found {len(results)} files with recommendations links")
 
-            for file_path, rec_files in sorted(results.items()):
-                print(f"  {file_path}:")
+            for i, (file_path, rec_files) in enumerate(sorted(results.items())):
+                if i > 0:
+                    print()
+                print(f"- [ ] {file_path}:")
                 for rec_file in rec_files[:3]:
                     print(f"    - {rec_file}")
         else:
             print("  No files found referencing recommendations.")
 
-    # If no specific query, show summary
-    if not args.find_urls and not args.find_rules_to_recommendations:
+    elif args.command == 'summary' or args.command is None:
         print(f"\nProcessed {len(link_map)} markdown files in ./content/")
         total_links = sum(len(links) for links in link_map.values())
         print(f"Found {total_links} total links")
 
         print("\nOutput:")
-        for (file_path, links) in sorted(link_map.items()):
-            print(f"  {file_path}: {len(links)} links")
+        for i, (file_path, links) in enumerate(sorted(link_map.items())):
+            if i > 0:
+                print()
+            print(f"- [ ] {file_path}: {len(links)} links")
             for link in links:
                 print(f"    - {link}")
+    else:
+        parser.print_help()
 
 
 if __name__ == '__main__':
