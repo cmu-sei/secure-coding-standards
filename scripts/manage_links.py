@@ -284,51 +284,16 @@ def find_rules_referencing_recommendations(link_map: Dict[str, List[str]]) -> Di
     return results
 
 
-def print_links_by_file(links: dict[str, list[str]]):
-    for i, (file_path, matching_urls) in enumerate(sorted(links.items(), key=lambda x: x[0])):
-        if i > 0:
-            print()
-        print(f"- [ ] {file_path}:")
-        for url in matching_urls:
-            print(f"    - {url}")
-
-
-def find_urls_main(link_map, output_format, urls):
-    # Parse URLs
-    urls = [url.strip() for url in urls]
-
-    results = find_files_with_urls(link_map, urls)
+def print_links_by_file(output_format: str, links: dict[str, list[str]]):
     if output_format == 'json':
-        print(json.dumps(results, indent=2))
+        print(json.dumps(links, indent=2))
     else:
-        print_links_by_file(results)
-
-
-def find_urls_file_main(link_map, output_format, file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        urls = [line.strip() for line in f if line.strip()]
-
-    results = find_files_with_urls(link_map, urls)
-    if output_format == 'json':
-        print(json.dumps(results, indent=2))
-    else:
-        print_links_by_file(results)
-
-
-def find_rules_to_recs_main(link_map, output_format):
-    results = find_rules_referencing_recommendations(link_map)
-    if output_format == 'json':
-        print(json.dumps(results, indent=2))
-    else:
-        print_links_by_file(results)
-
-
-def dump_main(link_map, output_format):
-    if output_format == 'json':
-        print(json.dumps(link_map, indent=2))
-    else:
-        print_links_by_file(link_map)
-
+        for i, (file_path, matching_urls) in enumerate(sorted(links.items(), key=lambda x: x[0])):
+            if i > 0:
+                print()
+            print(f"- [ ] {file_path}:")
+            for url in matching_urls:
+                print(f"    - {url}")
 
 
 def main():
@@ -369,15 +334,18 @@ def main():
 
     # Perform requested analysis
     if args.command == 'find-urls':
-        find_urls_main(link_map, args.output_format, args.urls)
+        urls = [url.strip() for url in args.urls]
+        print_links_by_file(args.output_format, find_files_with_urls(link_map, urls))
     elif args.command == 'find-urls-from-file':
-        find_urls_file_main(link_map, args.output_format, args.file_path)
+        with open(args.file_path, 'r', encoding='utf-8') as f:
+            urls = [line.strip() for line in f if line.strip()]
+        print_links_by_file(args.output_format, find_files_with_urls(link_map, urls))
     elif args.command == 'check-links':
         check_links_main(link_map, args.output_format)
     elif args.command == 'rules-to-recommendations':
-        find_rules_to_recs_main(link_map, args.output_format)
+        print_links_by_file(args.output_format, find_rules_referencing_recommendations(link_map))
     elif args.command == 'dump':
-        dump_main(link_map, args.output_format)
+        print_links_by_file(args.output_format, link_map)
     else:
         parser.print_help()
 
