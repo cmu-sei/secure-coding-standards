@@ -8,17 +8,16 @@ EXAMPLE:  python3 ./scripts/extract_links.py find-urls /sei-cert-c-coding-standa
 """
 
 import re
+import json
+import concurrent.futures
 from pathlib import Path
 from typing import Dict, List
+from tqdm import tqdm
+import requests
 
 
 def extract_markdown_links(content: str) -> List[str]:
-    """Extract markdown-style links: [text](url) or [text][ref].
-
-    Handles:
-    - [text](url)
-    - [text][reference]
-    - [text]: url (reference definitions)
+    """Extract markdown-style links: [text](url).
     """
     links = []
 
@@ -30,17 +29,6 @@ def extract_markdown_links(content: str) -> List[str]:
         url = url.strip('<>')
         if url:
             links.append(url)
-
-    # Reference links: [text][ref] or [text][] - we only track if there's a ref
-    ref_pattern = r'\[([^\]]+)\]\[([^\]]*)\]'
-    for match in re.finditer(ref_pattern, content):
-        ref = match.group(2).strip()
-        # If reference is empty, it's a shortcut reference link - skip
-        if ref:
-            # We can't get the URL without the reference definition
-            # These are typically defined elsewhere and hard to resolve
-            # We'll note them but can't extract the URL
-            pass
 
     return links
 
@@ -85,58 +73,8 @@ def is_relative_url(url: str) -> bool:
                 url.startswith('#'))
 
 
-def extract_file_from_url(url: str, base_path: Path, file_path: Path) -> str:
-    """Extract the target markdown file path from a URL.
-
-    Args:
-        url: The URL path
-        base_path: The content directory base path
-        file_path: The current file path
-
-    Returns:
-        The resolved file path relative to base_path, or empty string if not a markdown file
-    """
-    # Remove query parameters and fragments
-    url_path = url.split('?')[0].split('#')[0]
-
-    # Skip non-markdown and external links
-    if url_path.startswith('http://') or url_path.startswith('https://'):
-        return ''
-    if url_path.startswith('mailto:') or url_path.startswith('tel:'):
-        return ''
-
-    # Handle absolute paths from site root
-    if url_path.startswith('/'):
-        target = base_path / url_path.lstrip('/')
-        if target.suffix == '.md' and target.exists():
-            try:
-                return str(target.relative_to(base_path))
-            except ValueError:
-                return ''
-        return ''
-
-    # Handle relative paths
-    if url_path:
-        current_dir = file_path.parent
-        target = current_dir / url_path
-        # If it's a directory, look for index.md
-        if target.is_dir():
-            index_file = target / 'index.md'
-            if index_file.exists():
-                try:
-                    return str(index_file.relative_to(base_path))
-                except ValueError:
-                    return ''
-        elif target.suffix == '.md' and target.exists():
-            try:
-                return str(target.relative_to(base_path))
-            except ValueError:
-                return ''
-
-    return ''
-
-
 def process_markdown_files(content_dir: str) -> Dict[str, List[str]]:
+
     """Process all markdown files in content directory and extract links.
 
     Args:
@@ -162,7 +100,7 @@ def process_markdown_files(content_dir: str) -> Dict[str, List[str]]:
             links = extract_links(content)
 
             # Store absolute path for the file, relative paths for links
-            file_key = str(md_file.relative_to(content_path))
+            file_key = str(md_file)
             result[file_key] = links
 
         except Exception as e:
@@ -186,10 +124,122 @@ def find_files_with_urls(link_map: Dict[str, List[str]], urls: List[str]) -> Dic
     for file_path, links in link_map.items():
         matching_urls = [url for url in urls if url in links]
         if matching_urls:
-            results[file_path] = matching_urls
+            results[file_path] = list(sorted(matching_urls))
 
     return results
 
+
+def check_links_main(link_map: Dict[str, List[str]], output_format: str, checkpoint_file: str = 'checked_links.json'):
+    """Check if absolute URLs are alive or dead using parallel requests and tqdm progress bar."""
+    url_to_files = {}
+    for file_path, links in link_map.items():
+        for url in links:
+            if url.startswith('http://') or url.startswith('https://'):
+                if url not in url_to_files:
+                    url_to_files[url] = []
+                url_to_files[url].append(file_path)
+    
+    if not url_to_files:
+        print("No absolute URLs found to check.")
+        return
+
+    # Load checkpoint
+    checked_data = {}
+    try:
+        with open(checkpoint_file, 'r', encoding='utf-8') as f:
+            checked_data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+
+    urls_to_check = [url for url in url_to_files if url not in checked_data]
+    
+    print(f"Total unique URLs found: {len(url_to_files)}")
+    if urls_to_check:
+        print(f"Already checked: {len(url_to_files) - len(urls_to_check)}")
+        print(f"To check: {len(urls_to_check)}")
+    else:
+        print("All URLs have already been checked.")
+
+    def worker(url):
+        try:
+            try:
+                response = requests.head(url, timeout=10, allow_redirects=False)
+                if response.status_code == 405:
+                    response = requests.get(url, timeout=10, allow_redirects=False)
+            except requests.RequestException:
+                response = requests.get(url, timeout=10, allow_redirects=False)
+            
+            if 400 <= response.status_code < 600:
+                return url, {"status": "dead", "code": response.status_code}
+            elif 300 <= response.status_code < 400:
+                return url, {"status": "redirect", "code": response.status_code, "dest": response.headers.get('Location')}
+            else:
+                return url, {"status": "alive", "code": response.status_code}
+        except Exception as e:
+            return url, {"status": "error", "error": str(e)}
+
+    # Parallel execution
+    if urls_to_check:
+        i = 0
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {executor.submit(worker, url): url for url in urls_to_check}
+            for future in tqdm(concurrent.futures.as_completed(futures), total=len(urls_to_check), desc="Checking URLs"):
+                url, result = future.result()
+                checked_data[url] = result
+                # Save checkpoint periodically (every 10 URLs or so to reduce I/O, or just every time for safety)
+                # For simplicity and safety against interruption, we save every time.
+                if i % 100 == 99:
+                    with open(checkpoint_file, 'w', encoding='utf-8') as f:
+                        json.dump(checked_data, f, indent=2)
+                i += 1
+                
+        with open(checkpoint_file, 'w', encoding='utf-8') as f:
+            json.dump(checked_data, f, indent=2)
+
+    if output_format == 'json':
+        print(json.dumps(checked_data, indent=4))
+    else:
+        dead_urls = []
+        alive_urls = []
+        redirect_urls = []
+        error_urls = []
+
+        for url, info in checked_data.items():
+            if info["status"] == "dead":
+                dead_urls.append((url, info["code"]))
+            elif info["status"] == "alive":
+                alive_urls.append(url)
+            elif info["status"] == "redirect":
+                redirect_urls.append((url, info["dest"]))
+            elif info["status"] == "error":
+                error_urls.append((url, info["error"]))
+
+        print(f"\nSummary:")
+        print(f"  Alive: {len(alive_urls)}")
+        print(f"  Redirect: {len(redirect_urls)}")
+        print(f"  Dead: {len(dead_urls)}")
+        print(f"  Errors: {len(error_urls)}")
+
+        if redirect_urls:
+            print("\nRedirect URLs:")
+            for url, dest in redirect_urls:
+                print(f"- {url} (moved to {dest})")
+                for file_path in url_to_files.get(url, []):
+                    print(f"    - {file_path}")
+        
+        if dead_urls:
+            print("\nDead URLs:")
+            for url, code in dead_urls:
+                print(f"- {url} (Status: {code})")
+                for file_path in url_to_files.get(url, []):
+                    print(f"    - {file_path}")
+                    
+        if error_urls:
+            print("\nError URLs (could not connect):")
+            for url, err in error_urls:
+                print(f"- {url} (Error: {err})")
+                for file_path in url_to_files.get(url, []):
+                    print(f"    - {file_path}")
 
 def find_rules_referencing_recommendations(link_map: Dict[str, List[str]]) -> Dict[str, List[str]]:
     """Find all files under rules/ that reference files under recommendations/.
@@ -234,6 +284,53 @@ def find_rules_referencing_recommendations(link_map: Dict[str, List[str]]) -> Di
     return results
 
 
+def print_links_by_file(links: dict[str, list[str]]):
+    for i, (file_path, matching_urls) in enumerate(sorted(links.items(), key=lambda x: x[0])):
+        if i > 0:
+            print()
+        print(f"- [ ] {file_path}:")
+        for url in matching_urls:
+            print(f"    - {url}")
+
+
+def find_urls_main(link_map, output_format, urls):
+    # Parse URLs
+    urls = [url.strip() for url in urls]
+
+    results = find_files_with_urls(link_map, urls)
+    if output_format == 'json':
+        print(json.dumps(results, indent=2))
+    else:
+        print_links_by_file(results)
+
+
+def find_urls_file_main(link_map, output_format, file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        urls = [line.strip() for line in f if line.strip()]
+
+    results = find_files_with_urls(link_map, urls)
+    if output_format == 'json':
+        print(json.dumps(results, indent=2))
+    else:
+        print_links_by_file(results)
+
+
+def find_rules_to_recs_main(link_map, output_format):
+    results = find_rules_referencing_recommendations(link_map)
+    if output_format == 'json':
+        print(json.dumps(results, indent=2))
+    else:
+        print_links_by_file(results)
+
+
+def dump_main(link_map, output_format):
+    if output_format == 'json':
+        print(json.dumps(link_map, indent=2))
+    else:
+        print_links_by_file(link_map)
+
+
+
 def main():
     """Main entry point."""
     import argparse
@@ -246,16 +343,24 @@ def main():
     # subcommand: find-urls
     parser_find_urls = subparsers.add_parser('find-urls', help='Find files that reference these URLs')
     parser_find_urls.add_argument('urls', nargs='+', help='URLs to search for')
+    parser_find_urls.add_argument('-o', '--output-format', default='json', choices=['json', 'text'], help="The output format of the result.")
 
     # subcommand: find-urls-from-file
     parser_find_urls_file = subparsers.add_parser('find-urls-from-file', help='Find files that reference URLs listed in a file')
     parser_find_urls_file.add_argument('file_path', help='Path to the file containing URLs')
+    parser_find_urls_file.add_argument('-o', '--output-format', choices=['json', 'text'], help="The output format of the result.")
 
     # subcommand: rules-to-recommendations
     parser_rules = subparsers.add_parser('rules-to-recommendations', help='Find all files under rules/ that reference files under recommendations/')
+    parser_rules.add_argument('-o', '--output-format', choices=['json', 'text'], help="The output format of the result.")
+    
+    # subcommand: check-links
+    parser_check_links = subparsers.add_parser('check-links', help='Check if absolute URLs are alive or dead')
+    parser_check_links.add_argument('-o', '--output-format', choices=['json', 'text'], help="The output format of the result.")
 
-    # subcommand: summary
-    parser_summary = subparsers.add_parser('summary', help='Show a summary of links found')
+    # subcommand: dump
+    parser_dump = subparsers.add_parser('dump', help='Show a dump of links found')
+    parser_dump.add_argument('-o', '--output-format', choices=['json', 'text'], help="The output format of the result.")
 
     args = parser.parse_args()
 
@@ -264,67 +369,15 @@ def main():
 
     # Perform requested analysis
     if args.command == 'find-urls':
-        # Parse URLs
-        urls = [url.strip() for url in args.urls]
-
-        results = find_files_with_urls(link_map, urls)
-
-        print(f"\nFiles referencing {len(urls)} URL(s):")
-        if results:
-            for i, (file_path, matching_urls) in enumerate(sorted(results.items())):
-                if i > 0:
-                    print()
-                print(f"- [ ] {file_path}:")
-                for url in matching_urls:
-                    print(f"    - {url}")
-        else:
-            print("  No files found matching the specified URLs.")
-
+        find_urls_main(link_map, args.output_format, args.urls)
     elif args.command == 'find-urls-from-file':
-        with open(args.file_path, 'r', encoding='utf-8') as f:
-            urls = [line.strip() for line in f if line.strip()]
-
-        results = find_files_with_urls(link_map, urls)
-
-        print(f"\nFiles referencing {len(urls)} URL(s) from {args.file_path}:")
-        if results:
-            for i, (file_path, matching_urls) in enumerate(sorted(results.items())):
-                if i > 0:
-                    print()
-                print(f"- [ ] {file_path}:")
-                for url in matching_urls:
-                    print(f"    - {url}")
-        else:
-            print("  No files found matching the specified URLs.")
-
+        find_urls_file_main(link_map, args.output_format, args.file_path)
+    elif args.command == 'check-links':
+        check_links_main(link_map, args.output_format)
     elif args.command == 'rules-to-recommendations':
-        results = find_rules_referencing_recommendations(link_map)
-
-        print(f"\nFiles under rules/ referencing recommendations/:")
-        if results:
-            print(f"  Found {len(results)} files with recommendations links")
-
-            for i, (file_path, rec_files) in enumerate(sorted(results.items())):
-                if i > 0:
-                    print()
-                print(f"- [ ] {file_path}:")
-                for rec_file in rec_files[:3]:
-                    print(f"    - {rec_file}")
-        else:
-            print("  No files found referencing recommendations.")
-
-    elif args.command == 'summary' or args.command is None:
-        print(f"\nProcessed {len(link_map)} markdown files in ./content/")
-        total_links = sum(len(links) for links in link_map.values())
-        print(f"Found {total_links} total links")
-
-        print("\nOutput:")
-        for i, (file_path, links) in enumerate(sorted(link_map.items())):
-            if i > 0:
-                print()
-            print(f"- [ ] {file_path}: {len(links)} links")
-            for link in links:
-                print(f"    - {link}")
+        find_rules_to_recs_main(link_map, args.output_format)
+    elif args.command == 'dump':
+        dump_main(link_map, args.output_format)
     else:
         parser.print_help()
 
