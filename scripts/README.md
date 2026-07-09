@@ -21,12 +21,12 @@ source venv/bin/activate
 pip install -r scripts/requirements.txt
 ```
 
-## extract_links.py
+## manage_links.py
 
 The subcommands in this script can be used to manage links found in the standards. For up to date information, check the help:
 
 ```bash
-python scripts/extract_links.py --help
+python scripts/manage_links.py --help
 ```
 
 ### find-urls
