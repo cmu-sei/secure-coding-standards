@@ -147,14 +147,20 @@ def check_links_main(link_map: Dict[str, List[str]], output_format: str, checkpo
         return
 
     # Load checkpoint
+    old_checked_data = {}
     checked_data = {}
     try:
         with open(checkpoint_file, 'r', encoding='utf-8') as f:
-            checked_data = json.load(f)
+            old_checked_data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         pass
 
-    urls_to_check = [url for url in url_to_files if url not in checked_data]
+    urls_to_check = []
+    for url in url_to_files:
+        if url in old_checked_data:
+            checked_data[url] = old_checked_data[url]
+        else:
+            urls_to_check.append(url)
     
     print(f"Total unique URLs found: {len(url_to_files)}")
     if urls_to_check:
@@ -196,8 +202,8 @@ def check_links_main(link_map: Dict[str, List[str]], output_format: str, checkpo
                         json.dump(checked_data, f, indent=2)
                 i += 1
                 
-        with open(checkpoint_file, 'w', encoding='utf-8') as f:
-            json.dump(checked_data, f, indent=2)
+    with open(checkpoint_file, 'w', encoding='utf-8') as f:
+        json.dump(checked_data, f, indent=2)
 
     if output_format == 'json':
         print(json.dumps(checked_data, indent=4))
