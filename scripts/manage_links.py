@@ -73,7 +73,7 @@ def is_relative_url(url: str) -> bool:
                 url.startswith('#'))
 
 
-def process_markdown_files(content_dir: str) -> Dict[str, List[str]]:
+def process_markdown_files(paths: List[str]) -> Dict[str, List[str]]:
 
     """Process all markdown files in content directory and extract links.
 
@@ -83,28 +83,31 @@ def process_markdown_files(content_dir: str) -> Dict[str, List[str]]:
     Returns:
         Dictionary mapping markdown file paths to lists of links found in them
     """
-    content_path = Path(content_dir)
-    if not content_path.exists():
-        raise ValueError(f"Content directory does not exist: {content_dir}")
 
-    # Find all markdown files
-    md_files = list(content_path.glob('**/*.md'))
+    # Find all md files associated with the paths
+    md_files = []
+    for path in map(Path, paths):
+        if not path.exists():
+            raise ValueError(f"Path does not exist: {path}")
 
+        if path.is_dir():
+            # Find all markdown files
+            md_files.extend(path.glob('**/*.md'))
+        elif path.is_file() and path.suffix == '.md':
+            md_files.append(path)
+        else:
+            raise ValueError(f"Invalid path: {path}")
+
+    # Extract all links for the md files.
     result = {}
-
     for md_file in md_files:
-        try:
-            with open(md_file, 'r', encoding='utf-8') as f:
-                content = f.read()
+        with open(md_file, 'r', encoding='utf-8') as f:
+            content = f.read()
 
-            links = extract_links(content)
+        links = extract_links(content)
 
-            # Store absolute path for the file, relative paths for links
-            file_key = str(md_file)
-            result[file_key] = links
-
-        except Exception as e:
-            print(f"Error processing {md_file}: {e}")
+        file_key = str(md_file)
+        result[file_key] = links
 
     return result
 
@@ -144,14 +147,20 @@ def check_links_main(link_map: Dict[str, List[str]], output_format: str, checkpo
         return
 
     # Load checkpoint
+    old_checked_data = {}
     checked_data = {}
     try:
         with open(checkpoint_file, 'r', encoding='utf-8') as f:
-            checked_data = json.load(f)
+            old_checked_data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         pass
 
-    urls_to_check = [url for url in url_to_files if url not in checked_data]
+    urls_to_check = []
+    for url in url_to_files:
+        if url in old_checked_data:
+            checked_data[url] = old_checked_data[url]
+        else:
+            urls_to_check.append(url)
     
     print(f"Total unique URLs found: {len(url_to_files)}")
     if urls_to_check:
@@ -193,8 +202,8 @@ def check_links_main(link_map: Dict[str, List[str]], output_format: str, checkpo
                         json.dump(checked_data, f, indent=2)
                 i += 1
                 
-        with open(checkpoint_file, 'w', encoding='utf-8') as f:
-            json.dump(checked_data, f, indent=2)
+    with open(checkpoint_file, 'w', encoding='utf-8') as f:
+        json.dump(checked_data, f, indent=2)
 
     if output_format == 'json':
         print(json.dumps(checked_data, indent=4))
@@ -307,30 +316,35 @@ def main():
 
     # subcommand: find-urls
     parser_find_urls = subparsers.add_parser('find-urls', help='Find files that reference these URLs')
-    parser_find_urls.add_argument('urls', nargs='+', help='URLs to search for')
+    parser_find_urls.add_argument('--urls', nargs='+', help='URLs to search for')
     parser_find_urls.add_argument('-o', '--output-format', default='json', choices=['json', 'text'], help="The output format of the result.")
+    parser_find_urls.add_argument('paths', nargs='*')
 
     # subcommand: find-urls-from-file
     parser_find_urls_file = subparsers.add_parser('find-urls-from-file', help='Find files that reference URLs listed in a file')
-    parser_find_urls_file.add_argument('file_path', help='Path to the file containing URLs')
+    parser_find_urls_file.add_argument('--urls-file', help='Path to the file containing URLs')
     parser_find_urls_file.add_argument('-o', '--output-format', choices=['json', 'text'], help="The output format of the result.")
+    parser_find_urls_file.add_argument('paths', nargs='*')
 
     # subcommand: rules-to-recommendations
     parser_rules = subparsers.add_parser('rules-to-recommendations', help='Find all files under rules/ that reference files under recommendations/')
     parser_rules.add_argument('-o', '--output-format', choices=['json', 'text'], help="The output format of the result.")
+    parser_rules.add_argument('paths', nargs='*')
     
     # subcommand: check-links
     parser_check_links = subparsers.add_parser('check-links', help='Check if absolute URLs are alive or dead')
     parser_check_links.add_argument('-o', '--output-format', choices=['json', 'text'], help="The output format of the result.")
+    parser_check_links.add_argument('paths', nargs='*')
 
     # subcommand: dump
     parser_dump = subparsers.add_parser('dump', help='Show a dump of links found')
     parser_dump.add_argument('-o', '--output-format', choices=['json', 'text'], help="The output format of the result.")
+    parser_dump.add_argument('paths', nargs='*')
 
     args = parser.parse_args()
 
     # Load or generate link map
-    link_map = process_markdown_files('./content')
+    link_map = process_markdown_files(args.paths if len(args.paths) > 0 else ['./content/'])
 
     # Perform requested analysis
     if args.command == 'find-urls':
