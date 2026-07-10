@@ -43,6 +43,8 @@ This subcommand traverses the standards and then uses the python requests librar
 
 Intermediate and final results are cached in `./checked_links.json`.
 
+NOTE: Some external websites use bot protection that makes pages return 403 when accessed via requests. Thus, "dead" links with code 403 need to be checked manually in a browser. Also zscaler interferes with some external websites (notably gnu), so it is best to run the script off of zscaler.
+
 ### rules-to-recommendations
 
 This subcommand traverses the standards and identifies links from rules to recommendations.
