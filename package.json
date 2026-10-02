@@ -12,11 +12,11 @@
   },
   "dependencies": {
     "@cmu-sei/sds-documentation-site": "^1.7.0",
-    "nuxt": "^4.5.2",
-    "vue": "^3.5.42"
+    "nuxt": "^4.5.2"
   },
   "devDependencies": {
-    "vue-router": "^5.3.0"
+    "vue": "^3.5.43",
+    "vue-router": "^5.3.1"
   },
   "overrides": {
     "commander": "^13.1.0"
