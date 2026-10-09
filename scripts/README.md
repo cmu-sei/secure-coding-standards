@@ -87,3 +87,8 @@ python3 scripts/collect_guideline_table.py \
     'content/4.sei-cert-c-coding-standard/*.recommendations/**/*.md'
 ```
 
+
+## Other Files
+### codex-session-01a121df-c74d-7c02-ae25-f5d2865b8034.md
+
+Session where Codex created `distribute_guideline_table.py` and `collect_guideline_table.py`
