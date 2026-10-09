@@ -53,3 +53,37 @@ This subcommand traverses the standards and identifies links from rules to recom
 
 This subcommand traverses the standards and emits the list of links found on each page. 
 
+
+## distribute_guideline_table.py
+
+Distribute a related-guidelines table to guideline pages
+
+For example, distributing the MISRA C 2025 alerts among the guidelines: (Note that this leave the Relationship column empty).
+
+``` sh
+python3 scripts/distribute_guideline_table.py \
+        --link '[MISRA C:2025](/sei-cert-c-coding-standard/back-matter/aa-bibliography#AA.Bibliography-MISRA25)' \
+        --source content/4.sei-cert-c-coding-standard/04.back-matter/7.ff-related-guidelines/10.misra-c-2025.md \
+        --content-root content/4.sei-cert-c-coding-standard \
+        --target-section "Related Guidelines" \
+        --target-table-header "Taxonomy"
+```
+
+## collect_guideline_table.py
+
+Collect matching cells from Markdown pages into one table on standard output:
+
+For example, to reproduce the complete MISRA C:2025 table from the CERT C guidelines:
+
+``` sh
+python3 scripts/collect_guideline_table.py \
+    --content-root content/4.sei-cert-c-coding-standard \
+    --section 'Related Guidelines' \
+    --table-header 'Taxonomy item' \
+    --cell-name 'MISRA C:2025' \
+    --guideline-header 'CERT Rule' \
+    --value-header 'Related Guidelines' \
+    'content/4.sei-cert-c-coding-standard/*.rules/**/*.md' \
+    'content/4.sei-cert-c-coding-standard/*.recommendations/**/*.md'
+```
+
