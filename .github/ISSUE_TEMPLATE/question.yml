@@ -1,0 +1,46 @@
+name: Question
+description: Ask how a guideline should be read or applied, when the text doesn't settle it.
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when you aren't reporting an error, but the text or examples leave a case open. For example: whether an exception covers a particular case, or which reading a tool should apply. If the answer turns out to need a change to the page, it can become an erratum.
+  - type: dropdown
+    id: standard
+    attributes:
+      label: Standard
+      options:
+        - SEI CERT C
+        - SEI CERT C++
+        - SEI CERT Oracle Coding Standard for Java
+        - Android Secure Coding Standard
+        - SEI CERT Perl
+        - SEI CERT Fortran
+        - Development guidelines
+        - Other or several
+    validations:
+      required: true
+  - type: input
+    id: guideline
+    attributes:
+      label: Guideline(s)
+      description: Optional, if the question is about specific guidelines.
+      placeholder: "DCL06-C"
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: Optional. Code or text that shows the case.
+      render: text
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Optional. What you've considered, and how you read the text now.
