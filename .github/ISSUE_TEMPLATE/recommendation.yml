@@ -1,0 +1,79 @@
+name: Recommendation erratum
+description: Report a problem in a recommendation, such as a wrong code example, citation, or table entry.
+title: "<guideline>: "
+labels: ["recommendation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for **recommendations**, the guidelines in a standard's Recommendations section. For rules, use the *Rule erratum* form. For MISRA, CWE or CERT-to-CERT mappings, use the *Mapping* form.
+
+        Please keep each issue to one guideline and one problem, so it can be fixed and closed on its own.
+  - type: dropdown
+    id: standard
+    attributes:
+      label: Standard
+      options:
+        - SEI CERT C
+        - SEI CERT Oracle Coding Standard for Java
+        - Android Secure Coding Standard
+        - SEI CERT Perl
+        - Other or several
+    validations:
+      required: true
+  - type: input
+    id: guideline
+    attributes:
+      label: Guideline
+      description: The recommendation's identifier.
+      placeholder: "FIO20-C"
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: A link to the page or to the source line, and the section heading if it helps.
+      placeholder: "https://github.com/cmu-sei/secure-coding-standards/blob/<commit>/content/...md?plain=1#L123"
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of problem
+      options:
+        - Noncompliant example
+        - Compliant solution
+        - Recommendation text or exception
+        - Citation or quotation of a language standard or POSIX
+        - Table or risk assessment
+        - Formatting or rendering
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's wrong
+      description: Quote the text or code at issue, and say what is wrong with it. Note the edition of the language standard (or POSIX) you checked against.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Optional. For example, the compiler and flags with their output, or the paragraph of the standard.
+      render: text
+  - type: textarea
+    id: fix
+    attributes:
+      label: Suggested fix
+      description: Optional. The change you'd suggest.
+  - type: dropdown
+    id: pr
+    attributes:
+      label: Pull request
+      options:
+        - A pull request with the change follows
+        - No pull request planned
+        - Not sure yet
