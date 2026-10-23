@@ -9,12 +9,11 @@ Input arguments may be files, directories, or quoted glob expressions. Glob
 expressions support ``**`` recursion.
 """
 
-from __future__ import annotations
+from __future__ import annotations  # remove, eventually
 
 import argparse
 import glob
 import re
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List, Optional, Sequence, Tuple
@@ -52,7 +51,7 @@ class CollectedRow:
 def parse_markdown_row(line: str) -> Optional[Tuple[str, ...]]:
     """Return trimmed cells from a pipe-delimited Markdown row."""
 
-    stripped = line.rstrip("\r\n").strip()
+    stripped = line.strip()
     if not (stripped.startswith("|") and stripped.endswith("|")):
         return None
 
@@ -78,7 +77,7 @@ def parse_markdown_row(line: str) -> Optional[Tuple[str, ...]]:
 
 
 def is_separator_row(cells: Optional[Tuple[str, ...]]) -> bool:
-    return bool(cells) and all(SEPARATOR_CELL_RE.fullmatch(cell) for cell in cells)
+    return cells is not None and all(SEPARATOR_CELL_RE.fullmatch(cell) for cell in cells)
 
 
 def find_markdown_tables(
@@ -92,11 +91,9 @@ def find_markdown_tables(
     while index + 1 < end:
         header = parse_markdown_row(lines[index])
         separator = parse_markdown_row(lines[index + 1])
-        if (
-            header is None
+        if (header is None
             or not is_separator_row(separator)
-            or len(header) != len(separator)
-        ):
+            or len(header) != len(separator)):
             index += 1
             continue
 
@@ -114,15 +111,6 @@ def find_markdown_tables(
         index = table_end
 
     return tables
-
-
-def read_utf8(path: Path) -> str:
-    try:
-        return path.read_bytes().decode("utf-8")
-    except FileNotFoundError as error:
-        raise CollectionError(f"File does not exist: {path}") from error
-    except UnicodeDecodeError as error:
-        raise CollectionError(f"File is not valid UTF-8: {path}") from error
 
 
 def unnumbered_name(name: str) -> str:
@@ -159,12 +147,12 @@ def page_label(lines: Sequence[str], path: Path) -> str:
     """Use the leading identifier from the first H1, then fall back to the filename."""
 
     for line in lines:
-        match = HEADING_RE.fullmatch(line.rstrip("\r\n"))
+        match = HEADING_RE.fullmatch(line.rstrip("\n"))
         if match is None or len(match.group("marks")) != 1:
             continue
         title = match.group("title").strip()
         if ". " in title:
-            return title.split(". ", 1)[0].strip()
+            return title.partition(". ")[0].strip()
         if title:
             return title
 
@@ -179,7 +167,7 @@ def find_section_bounds(
 
     matches: List[Tuple[int, int]] = []
     for index, line in enumerate(lines):
-        match = HEADING_RE.fullmatch(line.rstrip("\r\n"))
+        match = HEADING_RE.fullmatch(line.rstrip("\n"))
         if match is not None and match.group("title").strip() == title:
             matches.append((index, len(match.group("marks"))))
 
@@ -193,7 +181,7 @@ def find_section_bounds(
     section_start, heading_level = matches[0]
     section_end = len(lines)
     for index in range(section_start + 1, len(lines)):
-        match = HEADING_RE.fullmatch(lines[index].rstrip("\r\n"))
+        match = HEADING_RE.fullmatch(lines[index].rstrip("\n"))
         if match is not None and len(match.group("marks")) <= heading_level:
             section_end = index
             break
@@ -217,7 +205,7 @@ def collect_from_file(
     table_header: str,
     cell_name: str,
 ) -> List[CollectedRow]:
-    text = read_utf8(path)
+    text = path.read_text()
     lines = text.splitlines(keepends=True)
     bounds = find_section_bounds(lines, section)
     if bounds is None:
@@ -228,11 +216,10 @@ def collect_from_file(
     collected: List[CollectedRow] = []
 
     for table in find_markdown_tables(lines, *bounds):
-        matching_columns = [
-            index
-            for index, header in enumerate(table.header_cells)
-            if header == table_header
-        ]
+        matching_columns = [index
+                            for index, header in enumerate(table.header_cells)
+                            if header == table_header
+                            ]
         if not matching_columns:
             continue
         if len(matching_columns) > 1:
@@ -312,9 +299,9 @@ def render_table(
     for row in rows:
         guideline = f"[{row.guideline_label}]({row.guideline_url})"
         lines.append(
-            f"| {escape_table_cell(guideline)} | {escape_table_cell(row.value)} |"
+            f"| {escape_table_cell(guideline)} | {escape_table_cell(row.value)} |\n"
         )
-    return "\n".join(lines) + "\n"
+    return "".join(lines)
 
 
 def path_argument(value: str) -> Path:
@@ -378,33 +365,28 @@ def parse_arguments(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Optional[Sequence[str]] = None):
     arguments = parse_arguments(argv)
     url_prefix = arguments.url_prefix
     if url_prefix is None:
         url_prefix = "/" + unnumbered_name(arguments.content_root.name)
 
-    try:
-        input_files = expand_inputs(arguments.inputs)
-        rows: List[CollectedRow] = []
-        for path in input_files:
-            rows.extend(
-                collect_from_file(
-                    path=path,
-                    content_root=arguments.content_root,
-                    url_prefix=url_prefix,
-                    section=arguments.section,
-                    table_header=arguments.table_header,
-                    cell_name=arguments.cell_name,
-                )
+    input_files = expand_inputs(arguments.inputs)
+    rows: List[CollectedRow] = []
+    for path in input_files:
+        rows.extend(
+            collect_from_file(
+                path=path,
+                content_root=arguments.content_root,
+                url_prefix=url_prefix,
+                section=arguments.section,
+                table_header=arguments.table_header,
+                cell_name=arguments.cell_name,
             )
-    except (CollectionError, OSError) as error:
-        print(f"error: {error}", file=sys.stderr)
-        return 1
+        )
 
     if not rows:
-        print("error: no matching rows found", file=sys.stderr)
-        return 1
+        raise Exception("No matching rows found")
 
     rows.sort(
         key=lambda row: (
@@ -414,15 +396,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         )
     )
     value_header = arguments.value_header or arguments.table_header
-    sys.stdout.write(render_table(rows, arguments.guideline_header, value_header))
+    print(render_table(rows, arguments.guideline_header, value_header))
 
     if arguments.verbose:
         print(
             f"Collected {len(rows)} row(s) from {len(input_files)} input file(s).",
             file=sys.stderr,
         )
-    return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

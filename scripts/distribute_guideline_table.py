@@ -102,7 +102,7 @@ def parse_markdown_row(line: str) -> Optional[Tuple[str, ...]]:
 
 
 def is_separator_row(cells: Optional[Tuple[str, ...]]) -> bool:
-    return bool(cells) and all(SEPARATOR_CELL_RE.fullmatch(cell) for cell in cells)
+    return cells is not None and all(SEPARATOR_CELL_RE.fullmatch(cell) for cell in cells)
 
 
 def find_markdown_tables(
