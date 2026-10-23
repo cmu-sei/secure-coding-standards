@@ -19,14 +19,10 @@ files.  It is safe to rerun: existing rows beginning with the supplied link
 are removed before one fresh row is appended.
 """
 
-from __future__ import annotations
+from __future__ import annotations  # remove, eventually
 
 import argparse
-import os
 import re
-import stat
-import sys
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -80,7 +76,7 @@ def parse_markdown_row(line: str) -> Optional[Tuple[str, ...]]:
     Pipes escaped with a backslash remain part of the cell content.
     """
 
-    stripped = line.rstrip("\r\n").strip()
+    stripped = line.strip()
     if not (stripped.startswith("|") and stripped.endswith("|")):
         return None
 
@@ -148,17 +144,8 @@ def find_markdown_tables(
     return tables
 
 
-def read_utf8(path: Path) -> str:
-    try:
-        return path.read_bytes().decode("utf-8")
-    except FileNotFoundError as error:
-        raise DistributionError(f"File does not exist: {path}") from error
-    except UnicodeDecodeError as error:
-        raise DistributionError(f"File is not valid UTF-8: {path}") from error
-
-
 def parse_source_rows(source: Path, table_index: int) -> List[SourceRow]:
-    text = read_utf8(source)
+    text = source.read_text()
     lines = text.splitlines(keepends=True)
     tables = find_markdown_tables(lines)
 
@@ -175,7 +162,7 @@ def parse_source_rows(source: Path, table_index: int) -> List[SourceRow]:
 
     for line_index in range(table.first_data_index, table.end_index):
         cells = parse_markdown_row(lines[line_index])
-        if cells is None or not cells:
+        if cells is None:
             raise DistributionError(
                 f"Malformed source row at {source}:{line_index + 1}"
             )
@@ -237,7 +224,7 @@ def route_for_page(content_root: Path, path: Path, url_prefix: str) -> str:
     suffix = "/".join(components)
     if not suffix:
         return url_prefix or "/"
-    return f"{url_prefix}/{suffix}" if url_prefix else f"/{suffix}"
+    return f"{url_prefix}/{suffix}"
 
 
 def build_page_index(
@@ -278,7 +265,7 @@ def find_section_bounds(lines: Sequence[str], title: str, path: Path) -> Tuple[i
     matches: List[Tuple[int, int]] = []
 
     for index, line in enumerate(lines):
-        match = HEADING_RE.fullmatch(line.rstrip("\r\n"))
+        match = HEADING_RE.fullmatch(line.rstrip("\n"))
         if match is not None and match.group("title").strip() == title:
             matches.append((index, len(match.group("marks"))))
 
@@ -290,22 +277,12 @@ def find_section_bounds(lines: Sequence[str], title: str, path: Path) -> Tuple[i
     section_start, heading_level = matches[0]
     section_end = len(lines)
     for index in range(section_start + 1, len(lines)):
-        match = HEADING_RE.fullmatch(lines[index].rstrip("\r\n"))
+        match = HEADING_RE.fullmatch(lines[index].rstrip("\n"))
         if match is not None and len(match.group("marks")) <= heading_level:
             section_end = index
             break
 
     return section_start + 1, section_end
-
-
-def format_markdown_row(cells: Sequence[str], newline: str) -> str:
-    return "| " + " | ".join(cells) + " |" + newline
-
-
-def newline_for(text: str) -> str:
-    if "\r\n" in text:
-        return "\r\n"
-    return "\n"
 
 
 def plan_destination_update(
@@ -315,16 +292,15 @@ def plan_destination_update(
     target_section: str,
     target_table_header: str,
 ) -> Optional[PlannedChange]:
-    original = read_utf8(path)
+    original = path.read_text()
     lines = original.splitlines(keepends=True)
     section_start, section_end = find_section_bounds(
         lines, target_section, path
     )
-    tables = [
-        table
-        for table in find_markdown_tables(lines, section_start, section_end)
-        if table.header_cells and table.header_cells[0] == target_table_header
-    ]
+    tables = [table
+              for table in find_markdown_tables(lines, section_start, section_end)
+              if table.header_cells and table.header_cells[0] == target_table_header
+              ]
 
     if len(tables) != 1:
         raise DistributionError(
@@ -340,18 +316,17 @@ def plan_destination_update(
         if cells is not None and cells and cells[0] == distributed_cell:
             matching_indexes.append(line_index)
 
-    newline = newline_for(original)
+
     desired_lines = [
-        format_markdown_row(row.destination_cells(distributed_cell), newline)
+        "| " + " | ".join(row.destination_cells(distributed_cell)) + " |\n"
         for row in rows
     ]
     matching_index_set = set(matching_indexes)
 
     if matching_indexes:
-        lines = [
-            line for line_index, line in enumerate(lines)
-            if line_index not in matching_index_set
-        ]
+        lines = [line for line_index, line in enumerate(lines)
+                 if line_index not in matching_index_set
+                 ]
 
     removed_before_insertion = sum(
         line_index < table.end_index for line_index in matching_indexes
@@ -404,32 +379,6 @@ def plan_changes(
     return rows, len(rows_by_destination), changes
 
 
-def write_atomic(change: PlannedChange) -> None:
-    """Atomically replace one file while preserving its permission bits."""
-
-    mode = stat.S_IMODE(change.path.stat().st_mode)
-    temporary_name: Optional[str] = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="wb", prefix=f".{change.path.name}.", dir=change.path.parent,
-            delete=False
-        ) as temporary:
-            temporary_name = temporary.name
-            temporary.write(change.updated.encode("utf-8"))
-            temporary.flush()
-            os.fsync(temporary.fileno())
-
-        os.chmod(temporary_name, mode)
-        os.replace(temporary_name, change.path)
-        temporary_name = None
-    finally:
-        if temporary_name is not None:
-            try:
-                os.unlink(temporary_name)
-            except FileNotFoundError:
-                pass
-
-
 def path_argument(value: str) -> Path:
     return Path(value).expanduser().resolve()
 
@@ -440,23 +389,13 @@ def cell_argument(value: str) -> str:
     cell = value.strip()
     if not cell:
         raise argparse.ArgumentTypeError("must not be empty")
-    if "\n" in cell or "\r" in cell:
+    if "\n" in cell:
         raise argparse.ArgumentTypeError("must not contain a newline")
     if len(parse_markdown_row(f"| {cell} |") or ()) != 1:
         raise argparse.ArgumentTypeError(
             "must not contain an unescaped pipe character"
         )
     return cell
-
-
-def positive_integer(value: str) -> int:
-    try:
-        number = int(value)
-    except ValueError as error:
-        raise argparse.ArgumentTypeError("must be an integer") from error
-    if number < 1:
-        raise argparse.ArgumentTypeError("must be at least 1")
-    return number
 
 
 def parse_arguments(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -494,7 +433,7 @@ def parse_arguments(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--source-table-index",
-        type=positive_integer,
+        type=int,
         default=1,
         help="1-based index of the Markdown table to distribute (default: 1)",
     )
@@ -521,25 +460,21 @@ def parse_arguments(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Optional[Sequence[str]] = None):
     arguments = parse_arguments(argv)
     url_prefix = arguments.url_prefix
     if url_prefix is None:
         url_prefix = "/" + unnumbered_name(arguments.content_root.name)
 
-    try:
-        rows, destination_count, changes = plan_changes(
-            source=arguments.source,
-            content_root=arguments.content_root,
-            url_prefix=url_prefix,
-            distributed_cell=arguments.link,
-            source_table_index=arguments.source_table_index,
-            target_section=arguments.target_section,
-            target_table_header=arguments.target_table_header,
-        )
-    except (DistributionError, OSError) as error:
-        print(f"error: {error}", file=sys.stderr)
-        return 1
+    rows, destination_count, changes = plan_changes(
+        source=arguments.source,
+        content_root=arguments.content_root,
+        url_prefix=url_prefix,
+        distributed_cell=arguments.link,
+        source_table_index=arguments.source_table_index,
+        target_section=arguments.target_section,
+        target_table_header=arguments.target_table_header,
+    )
 
     inserted = sum(change.action == "inserted" for change in changes)
     updated = sum(change.action == "updated" for change in changes)
@@ -558,22 +493,20 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             f"Dry run: {len(changes)} file(s) would change "
             f"({inserted} inserted, {updated} updated); {unchanged} already current."
         )
-        return 0
+        return
 
     try:
         for change in changes:
-            write_atomic(change)
+            change.path.write_text(change.updated)
     except OSError as error:
-        print(f"error while writing {change.path}: {error}", file=sys.stderr)
-        return 1
+        raise Exception(f"error while writing {change.path}") from error
 
     print(
         f"Processed {len(rows)} source row(s) across {destination_count} "
         f"destination file(s): {inserted} inserted, {updated} updated, "
         f"{unchanged} already current."
     )
-    return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()
