@@ -1,0 +1,67 @@
+name: Mapping
+description: Report a problem in a guideline's mapping to MISRA C, CWE, or another CERT guideline.
+title: "<guideline>: "
+labels: ["mapping"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for **mappings**: the MISRA C rows, the CWE tables and mapping notes, and the cross-references between CERT guidelines. For a problem with a guideline's own text or examples, use the *Rule erratum* or *Recommendation erratum* form.
+  - type: dropdown
+    id: standard
+    attributes:
+      label: Standard
+      options:
+        - SEI CERT C
+        - SEI CERT C++
+        - SEI CERT Oracle Coding Standard for Java
+        - Android Secure Coding Standard
+        - SEI CERT Perl
+        - SEI CERT Fortran
+        - Other or several
+    validations:
+      required: true
+  - type: input
+    id: guideline
+    attributes:
+      label: Guideline(s)
+      description: One guideline, or a short list if the same problem spans several.
+      placeholder: "EXP12-C"
+    validations:
+      required: true
+  - type: dropdown
+    id: target
+    attributes:
+      label: Mapping
+      options:
+        - MISRA C:2025
+        - MISRA C:2012
+        - CWE
+        - CERT to CERT
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Optional. A link to the page, mapping table or source line.
+  - type: textarea
+    id: current
+    attributes:
+      label: Current mapping
+      description: What the page says now. Quote the row or note.
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed mapping
+      description: What you think it should say, and the relationship if it applies (for example, subset, overlap, or no relationship).
+    validations:
+      required: true
+  - type: textarea
+    id: basis
+    attributes:
+      label: Basis
+      description: Optional. Why. For example, the MISRA or CWE entry, another page that disagrees, or the guideline's own text.

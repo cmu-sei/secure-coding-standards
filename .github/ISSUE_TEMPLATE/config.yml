@@ -1,0 +1,7 @@
+blank_issues_enabled: true
+# TODO (optional): links shown on the "New issue" page next to the forms.
+# Uncomment and edit, or delete this block.
+# contact_links:
+#   - name: SEI CERT Secure Coding website
+#     url: https://cmu-sei.github.io/secure-coding-standards/
+#     about: Read the published standards.
