@@ -88,6 +88,18 @@ python3 scripts/collect_guideline_table.py \
 ```
 
 
+## fix_related_vulnerabilities.py
+
+Checks that each guideline's "Related Vulnerabilities" search link (`https://www.kb.cert.org/vuls/search/?q=...`) uses the guideline's own identifier, taken from the page title. With `--write`, it replaces any other identifier (often a former one) with the page's own. It uses only the Python standard library.
+
+``` sh
+# Report mismatches (exit status 1 if any)
+python3 scripts/fix_related_vulnerabilities.py content/4.sei-cert-c-coding-standard
+
+# Fix them
+python3 scripts/fix_related_vulnerabilities.py --write content/4.sei-cert-c-coding-standard
+```
+
 ## Other Files
 ### codex-session-01a121df-c74d-7c02-ae25-f5d2865b8034.md
 
