@@ -10,7 +10,7 @@ Look at the [Content documentation](https://content.nuxt.com/) to learn more.
 
 ### Prerequisites
 
-This project requires **Node.js v22.22.2** (as found in `.nvmrc`). It is recommended to use [nvm](https://github.com/nvm-sh/nvm) to manage Node versions. Use the `.nvmrc` file included in this repository as a source of truth. You can switch to the correct version by running:
+This project requires **Node.js v24.22.3** (as found in `.nvmrc`). It is recommended to use [nvm](https://github.com/nvm-sh/nvm) to manage Node versions. Use the `.nvmrc` file included in this repository as a source of truth. You can switch to the correct version by running:
 
 ```bash
 nvm use
