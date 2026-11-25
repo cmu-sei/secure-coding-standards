@@ -100,6 +100,16 @@ python3 scripts/fix_related_vulnerabilities.py content/4.sei-cert-c-coding-stand
 python3 scripts/fix_related_vulnerabilities.py --write content/4.sei-cert-c-coding-standard
 ```
 
+## check_ub_links.py
+
+Checks the CERT C standard's "undefined behavior N" links against the CC. Undefined Behavior table and reports where they disagree: link text naming a different number from its anchor, malformed anchors or anchors to rows that don't exist, pages citing a row whose Guideline column doesn't list them, and Guideline-column entries for pages that don't cite the row. It only reports; deciding whether the page or the table is wrong is left to the reader. It uses only the Python standard library.
+
+``` sh
+python3 scripts/check_ub_links.py                 # all findings; exit status 1 if any
+python3 scripts/check_ub_links.py --kind text --kind anchor
+python3 scripts/check_ub_links.py --tsv > ub-findings.tsv
+```
+
 ## Other Files
 ### codex-session-01a121df-c74d-7c02-ae25-f5d2865b8034.md
 
